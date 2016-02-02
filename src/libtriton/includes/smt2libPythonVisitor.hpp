@@ -37,17 +37,17 @@ namespace triton {
 
       protected:
         //! The result.
-        std::ostream result;
+        std::ostream& result;
 
       public:
         //! Constructor.
-        PythonVisitor();
+        PythonVisitor(std::ostream& stream);
 
         //! Destructor.
         ~PythonVisitor();
 
         //! Evaluates a Triton AST.
-        virtual std::ostream& eval(smt2lib::smtAstAbstractNode& e);
+        virtual void eval(smt2lib::smtAstAbstractNode& e);
 
         //! Evaluate operator.
         virtual void operator()(smt2lib::smtAstAbstractNode& e);
