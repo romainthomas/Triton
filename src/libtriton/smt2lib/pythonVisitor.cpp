@@ -129,8 +129,8 @@ namespace triton {
     void PythonVisitor::operator()(smtAstBvsubNode& e) {
       auto op1 = e.getChilds()[0];
       auto op2 = e.getChilds()[1];
-      this->eval(*op1);
-      this->eval(*op2);
+      //this->eval(*op1);
+      //this->eval(*op2);
       result << "a" << " - " <<  "b" << " & mask_" << std::endl;
     }
 

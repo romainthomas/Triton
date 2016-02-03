@@ -12,6 +12,7 @@
 
 #include "smt2lib.hpp"
 #include "smt2libVisitor.hpp"
+#include "smt2libPythonVariable.hpp"
 #include "tritonTypes.hpp"
 
 
