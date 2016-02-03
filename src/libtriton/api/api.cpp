@@ -292,6 +292,13 @@ namespace triton {
     this->arch.buildSemantics(inst);
   }
 
+  std::ostream& API::python(smt2lib::smtAstAbstractNode *node, std::ostream& stream) {
+    triton::smt2lib::PythonVisitor pythonvisitor(stream);
+    pythonvisitor.eval(*node);
+    return stream;
+
+  }
+
 
 
   /* Processing API ================================================================================ */

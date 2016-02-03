@@ -24,7 +24,7 @@ namespace triton {
    *  \addtogroup smt2-lib
    *  @{
    */
-
+    class smtAstAbstractNode;
     class smtAstAssertNode;
     class smtAstBvaddNode;
     class smtAstBvandNode;

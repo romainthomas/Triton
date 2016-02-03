@@ -155,6 +155,8 @@ namespace triton {
         //! [**architecture api**] - Builds the instruction semantics based on the SMT2-Lib representation. You must define an architecture before. \sa processing().
         void buildSemantics(triton::arch::Instruction &inst);
 
+        std::ostream& python(smt2lib::smtAstAbstractNode *node, std::ostream& stream);
+
 
 
         /* Processing API ================================================================================ */

@@ -47,7 +47,7 @@ namespace triton {
         ~PythonVisitor();
 
         //! Evaluates a Triton AST.
-        virtual void eval(smt2lib::smtAstAbstractNode& e);
+        void eval(smt2lib::smtAstAbstractNode& e);
 
         //! Evaluate operator.
         virtual void operator()(smt2lib::smtAstAbstractNode& e);

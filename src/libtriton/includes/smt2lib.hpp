@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "smt2libVisitor.hpp"
+#include "smt2libPythonVisitor.hpp"
 #include "tritonTypes.hpp"
 
 
