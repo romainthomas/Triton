@@ -28,6 +28,7 @@ namespace triton {
 
 
     void PythonVisitor::eval(smtAstAbstractNode& e) {
+      result << "# Python Eval" << std::endl;
       e.accept(*this);
     }
 
@@ -43,6 +44,9 @@ namespace triton {
 
 
     void PythonVisitor::operator()(smtAstBvaddNode& e) {
+      //auto op1 = e.getChilds()[0];
+      //auto op2 = e.getChilds()[1];
+
     }
 
 
@@ -123,6 +127,11 @@ namespace triton {
 
 
     void PythonVisitor::operator()(smtAstBvsubNode& e) {
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+      this->eval(*op1);
+      this->eval(*op2);
+      result << "a" << " - " <<  "b" << " & mask_" << std::endl;
     }
 
 

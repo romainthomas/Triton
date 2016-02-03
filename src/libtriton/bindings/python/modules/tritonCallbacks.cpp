@@ -1206,6 +1206,31 @@ namespace triton {
         return Py_None;
       }
 
+      static PyObject* triton_python(PyObject* self, PyObject* node) {
+        /* Check if the architecture is definied */
+        if (triton::api.getArchitecture() == triton::arch::ARCH_INVALID)
+          return PyErr_Format(PyExc_TypeError, "evaluateAst(): Architecture is not defined.");
+
+        if (!PySmtAstNode_Check(node))
+          return PyErr_Format(PyExc_TypeError, "evaluateAst(): Expects a SmtAstNode as argument.");
+
+        try {
+          std::ostringstream ss;
+          triton::api.python(PySmtAstNode_AsSmtAstNode(node), ss);
+          return Py_BuildValue("s", ss.str().c_str());
+          //return Py_BuildValue("%s",triton::api.evaluateAst(PySmtAstNode_AsSmtAstNode(node)));
+        }
+        catch (const std::exception& e) {
+          return PyErr_Format(PyExc_TypeError, "%s", e.what());
+        }
+        catch (const z3::exception& e) {
+          return PyErr_Format(PyExc_TypeError, "%s", e.msg());
+        }
+
+        Py_INCREF(Py_None);
+        return Py_None;
+      }
+
 
       static PyObject* triton_getArchitecture(PyObject* self, PyObject* noarg) {
         return Py_BuildValue("k", triton::api.getArchitecture());
@@ -2495,6 +2520,7 @@ namespace triton {
         {"enableSymbolicEngine",                (PyCFunction)triton_enableSymbolicEngine,                   METH_O,             ""},
         {"enableSymbolicOptimization",          (PyCFunction)triton_enableSymbolicOptimization,             METH_O,             ""},
         {"enableTaintEngine",                   (PyCFunction)triton_enableTaintEngine,                      METH_O,             ""},
+        {"python",                         (PyCFunction)triton_python,                            METH_O,             ""},
         {"evaluateAst",                         (PyCFunction)triton_evaluateAst,                            METH_O,             ""},
         {"getArchitecture",                     (PyCFunction)triton_getArchitecture,                        METH_NOARGS,        ""},
         {"getAstFromId",                        (PyCFunction)triton_getAstFromId,                           METH_O,             ""},
