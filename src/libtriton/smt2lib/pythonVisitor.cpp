@@ -22,8 +22,6 @@ namespace triton {
       result(stream),
       currentId(0)
     {
-      this->result << "# Python Eval" << std::endl;
-      this->prefix = "";
     }
 
 
@@ -35,7 +33,7 @@ namespace triton {
       if (this->variables.find(node) != std::end(this->variables)) {
         return this->variables[node];
       } else {
-        //result << this->prefix;
+
         this->eval(*node);
         return this->variables[node];
       }
@@ -59,6 +57,7 @@ namespace triton {
 
     void PythonVisitor::eval(smtAstAbstractNode& e) {
       e.accept(*this);
+
     }
 
 
@@ -73,7 +72,6 @@ namespace triton {
 
 
     void PythonVisitor::operator()(smtAstBvaddNode& e) {
-
       auto op1 = e.getChilds()[0];
       auto op2 = e.getChilds()[1];
 
@@ -82,10 +80,8 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
-
-
       result << pyResult.name() << " = (" << pyOp1.name() << " + " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      this->maskUsed.insert(pyResult.size());
 
 
     }
@@ -128,6 +124,8 @@ namespace triton {
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
       result << pyResult.name() << " = (" << pyOp1.name() << " * " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+
+      this->maskUsed.insert(pyResult.size());
     }
 
 
@@ -149,6 +147,8 @@ namespace triton {
 
 
       result << pyResult.name() << " = ~ (" << pyOp1.name() << " & " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+
+      this->maskUsed.insert(pyResult.size());
     }
 
 
@@ -158,6 +158,8 @@ namespace triton {
       auto pyResult = this->addPyVariable(&e, pyOp1.size());
 
       result << pyResult.name() << " = (-" << pyOp1.name()  << ") & mask_" << pyResult.size() << std::endl;
+
+      this->maskUsed.insert(pyResult.size());
 
     }
 
@@ -175,6 +177,7 @@ namespace triton {
 
       result << pyResult.name() << " = (~" << pyOp1.name()  << ") & mask_" << pyResult.size() << std::endl;
 
+      this->maskUsed.insert(pyResult.size());
 
     }
 
@@ -190,6 +193,7 @@ namespace triton {
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
       result << pyResult.name() << " = (" << pyOp1.name() << " | " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      this->maskUsed.insert(pyResult.size());
     }
 
 
@@ -233,6 +237,7 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
+
       result << pyResult.name() << " = (" << pyOp1.name() << " > " << pyOp2.name() << ")" << std::endl;
     }
 
@@ -265,6 +270,7 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
+
       result << pyResult.name() << " = (" << pyOp1.name() << " < " << pyOp2.name() << ")" << std::endl;
     }
 
@@ -285,9 +291,9 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
 
       result << pyResult.name() << " = " << pyOp1.name() << " - " <<  pyOp2.name() << " & mask_" << pyResult.size() << std::endl;
+      this->maskUsed.insert(pyResult.size());
     }
 
 
@@ -373,6 +379,7 @@ namespace triton {
 
 
       result << pyResult.name() << " = (" << pyOp1.name() << " ^ " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      this->maskUsed.insert(pyResult.size());
     }
 
 
@@ -411,6 +418,7 @@ namespace triton {
       auto pyResult = this->addPyVariable(&e, size);
 
       auto currentVariable = this->getPyVariable(childs[0]);
+
       result << pyResult.name() << " = ";
       result << "(" << currentVariable.name() << " << " << size - currentVariable.size() << ")";
       size -= currentVariable.size();
@@ -474,16 +482,16 @@ namespace triton {
 
       auto pyOp1 = this->getPyVariable(op3);
 
-
       if (static_cast<uint32>(op1->getValue() - op2->getValue() + 1) != pyOp1.size()) {
-
         auto pyResult = this->addPyVariable(&e, static_cast<uint32>(op1->getValue() - op2->getValue() + 1));
 
         if (op2->getValue() != 0) {
-          result << pyResult.name() << " = (" << pyOp1.name() << " >> " << op2->getValue() << ") & mask_" << pyResult.size() << " # bvextracr" << std::endl;
+          result << pyResult.name() << " = (" << pyOp1.name() << " >> " << op2->getValue() << ") & mask_" << pyResult.size()  << std::endl;
         } else {
-          result << pyResult.name() << " = " << pyOp1.name() << " & mask_" << pyResult.size() << " # bvextracr" << std::endl;
+          result << pyResult.name() << " = " << pyOp1.name() << " & mask_" << pyResult.size() << std::endl;
         }
+
+        this->maskUsed.insert(pyResult.size());
       } else {
         this->variables[&e] = pyOp1;
       }
@@ -499,18 +507,12 @@ namespace triton {
       auto itrue  = e.getChilds()[1];
       auto ifalse = e.getChilds()[2];
 
-
       auto pyCond = this->getPyVariable(cond);
-      result << "if " << pyCond.name() << " == True :" << std::endl;
-      this->prefix += "\t";
       auto pyTrue = this->getPyVariable(itrue);
-      this->prefix = "";
-      result << "else:" << std::endl;
-      this->prefix += "\t";
       auto pyFalse = this->getPyVariable(ifalse);
+      auto pyResult = this->addPyVariable(&e, 1);
 
-      this->addPyVariable(&e, 1);
-
+      result << pyResult.name() << " = " << pyTrue.name() << " if " << pyCond.name() << " else " << pyFalse.name() << std::endl;
 
 
     }
@@ -552,12 +554,26 @@ namespace triton {
 
 
     void PythonVisitor::operator()(smtAstSxNode& e) {
+
+#if 1
+      auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // size to extend
+      auto op2 = e.getChilds()[1];
+      auto pyOp2 = getPyVariable(op2);
+
+      uint32 size = pyOp2.size() + static_cast<uint32>(op1->getValue());
+      auto pyResult = addPyVariable(&e, size);
+
+      result << pyResult.name() << " = sign_extend(" << pyOp2.name() << ", " << size << ")" << std::endl;
+
+#else
       auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // size to extend
       auto op2 = e.getChilds()[1];
       auto pyOp2 = getPyVariable(op2);
       pyOp2.setSize(pyOp2.size() + static_cast<uint32>(op1->getValue()));
+
       this->variables[op2] = pyOp2;
-      this->variables[&e]  = pyOp2;
+      this->variables[&e] = pyOp2;
+#endif
     }
 
 
@@ -566,6 +582,8 @@ namespace triton {
       PythonVariable pyResult;
 
       std::string varName = e.getValue();
+
+      this->variablesUsed.insert(varName);
       pyResult.setName(varName);
       triton::engines::symbolic::SymbolicVariable* symVar = triton::api.getSymbolicVariableFromName(varName);
 
@@ -593,11 +611,10 @@ namespace triton {
 
     void PythonVisitor::operator()(smtAstZxNode& e) {
 
-      auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // size to extend
+      //auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // size to extend
       auto op2 = e.getChilds()[1];
       auto pyOp2 = getPyVariable(op2);
-
-      pyOp2.setSize(pyOp2.size() + static_cast<uint32>(op1->getValue()));
+      //pyOp2.setSize(pyOp2.size() + static_cast<uint32>(op1->getValue()));
 
       this->variables[op2] = pyOp2;
       this->variables[&e] = pyOp2;

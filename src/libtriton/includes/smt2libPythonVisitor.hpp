@@ -16,6 +16,7 @@
 #include "tritonTypes.hpp"
 
 #include <unordered_map>
+#include <set>
 
 
 //! \module The Triton namespace
@@ -37,16 +38,19 @@ namespace triton {
     /*! \brief Converts a Triton's AST to Python pseudo code. */
     class PythonVisitor : public Visitor {
       typedef std::unordered_map<triton::smt2lib::smtAstAbstractNode*, triton::smt2lib::PythonVariable> variablesmap;
+      public:
+        PythonVariable& getPyVariable(triton::smt2lib::smtAstAbstractNode* node);
+        PythonVariable& addPyVariable(triton::smt2lib::smtAstAbstractNode* node, uint32 size);
+        std::set<uint32> maskUsed;
+        std::set<std::string> variablesUsed;
 
       protected:
         //! The result.
         std::ostream& result;
         variablesmap variables;
         uint32 currentId;
-        std::string prefix;
 
-        PythonVariable& getPyVariable(triton::smt2lib::smtAstAbstractNode* node);
-        PythonVariable& addPyVariable(triton::smt2lib::smtAstAbstractNode* node, uint32 size);
+
 
       public:
         //! Constructor.

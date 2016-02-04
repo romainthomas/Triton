@@ -293,8 +293,20 @@ namespace triton {
   }
 
   std::ostream& API::python(smt2lib::smtAstAbstractNode *node, std::ostream& stream) {
-    triton::smt2lib::PythonVisitor pythonvisitor(stream);
-    pythonvisitor.eval(*node);
+    std::ostringstream ss;
+    triton::smt2lib::PythonVisitor pythonvisitor(ss);
+    //pythonvisitor.eval(*node);
+    auto pyVar = pythonvisitor.getPyVariable(node);
+
+    for (auto mask : pythonvisitor.maskUsed)
+      stream << "mask_" << std::dec << mask << " = (1 << " << mask << ") - 1" << std::endl;
+    for (auto var : pythonvisitor.variablesUsed)
+      stream << var << " = 0" << std::endl;
+    stream << "def sign_extend(value, bits):" << std::endl;
+    stream << "\tsign_bit = 1 << (bits - 1)" << std::endl;
+    stream << "\treturn (value & (sign_bit - 1)) - (value & sign_bit)" << std::endl;
+    stream << ss.str();
+    stream << "print " << pyVar.name() << std::endl;
     return stream;
 
   }
