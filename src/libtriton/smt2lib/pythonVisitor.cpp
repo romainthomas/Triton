@@ -23,6 +23,7 @@ namespace triton {
       currentId(0)
     {
       this->result << "# Python Eval" << std::endl;
+      this->prefix = "";
     }
 
 
@@ -34,6 +35,7 @@ namespace triton {
       if (this->variables.find(node) != std::end(this->variables)) {
         return this->variables[node];
       } else {
+        //result << this->prefix;
         this->eval(*node);
         return this->variables[node];
       }
@@ -82,10 +84,8 @@ namespace triton {
 
       std::string op1_str, op2_str;
 
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
 
-      result << pyResult.name() << " = (" << op1_str << " + " <<  op2_str << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = (" << pyOp1.name() << " + " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
 
 
     }
@@ -101,18 +101,19 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
-      result << pyResult.name() << " = " << op1_str << " & " <<  op2_str  << std::endl;
+      result << pyResult.name() << " = " << pyOp1.name() << " & " <<  pyOp2.name()  << " # bvand" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvashrNode& e) {
+
+      throw std::runtime_error("smtAstBvashrNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvlshrNode& e) {
+
+      throw std::runtime_error("smtAstBvlshrNode not implemented");
     }
 
 
@@ -126,15 +127,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
-
-      result << pyResult.name() << " = (" << op1_str << " * " <<  op2_str << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = (" << pyOp1.name() << " * " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvsmodNode& e) {
+
+      throw std::runtime_error("smtAstBvsmodNode not implemented");
     }
 
 
@@ -148,11 +147,8 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
 
-      result << pyResult.name() << " = ~ (" << op1_str << " & " <<  op2_str << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = ~ (" << pyOp1.name() << " & " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
     }
 
 
@@ -161,16 +157,14 @@ namespace triton {
       auto pyOp1 = this->getPyVariable(op1);
       auto pyResult = this->addPyVariable(&e, pyOp1.size());
 
-      std::string op1_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-
-
-      result << pyResult.name() << " = (-" << op1_str  << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = (-" << pyOp1.name()  << ") & mask_" << pyResult.size() << std::endl;
 
     }
 
 
     void PythonVisitor::operator()(smtAstBvnorNode& e) {
+
+      throw std::runtime_error("smtAstBvnorNode not implemented");
     }
 
 
@@ -179,11 +173,7 @@ namespace triton {
       auto pyOp1 = this->getPyVariable(op1);
       auto pyResult = this->addPyVariable(&e, pyOp1.size());
 
-      std::string op1_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-
-
-      result << pyResult.name() << " = (~" << op1_str  << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = (~" << pyOp1.name()  << ") & mask_" << pyResult.size() << std::endl;
 
 
     }
@@ -199,47 +189,89 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
-
-      result << pyResult.name() << " = (" << op1_str << " | " <<  op2_str << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = (" << pyOp1.name() << " | " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvrolNode& e) {
+
+      throw std::runtime_error("smtAstBvrolNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvrorNode& e) {
+
+      throw std::runtime_error("smtAstBvrorNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvsdivNode& e) {
+
+      throw std::runtime_error("smtAstBvsdivNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvsgeNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " >= " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvsgtNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " > " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvshlNode& e) {
+
+      throw std::runtime_error("smtAstBvshlNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvsleNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " <= " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvsltNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " < " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvsremNode& e) {
+
+      throw std::runtime_error("smtAstBvsremNode not implemented");
     }
 
 
@@ -254,38 +286,78 @@ namespace triton {
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
       std::string op1_str, op2_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
 
-      result << pyResult.name() << " = " << op1_str << " - " <<  op2_str << " & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = " << pyOp1.name() << " - " <<  pyOp2.name() << " & mask_" << pyResult.size() << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvudivNode& e) {
+
+      throw std::runtime_error("smtAstBvudivNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvugeNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " >= " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvugtNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " > " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvuleNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " <= " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvultNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " < " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstBvuremNode& e) {
+
+      throw std::runtime_error("smtAstBvuremNode not implemented");
     }
 
 
     void PythonVisitor::operator()(smtAstBvxnorNode& e) {
+
+      throw std::runtime_error("smtAstBvxnorNode not implemented");
     }
 
 
@@ -299,11 +371,8 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      std::string op1_str, op2_str;
-      op1_str = (op1->getKind() == BV_NODE or op1->getKind() == ZX_NODE or op1->getKind() == SX_NODE) ? std::string{pyOp1.value()} : pyOp1.name();
-      op2_str = (op2->getKind() == BV_NODE or op2->getKind() == ZX_NODE or op2->getKind() == SX_NODE) ? std::string{pyOp2.value()} : pyOp2.name();
 
-      result << pyResult.name() << " = (" << op1_str << " ^ " <<  op2_str << ") & mask_" << pyResult.size() << std::endl;
+      result << pyResult.name() << " = (" << pyOp1.name() << " ^ " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
     }
 
 
@@ -372,45 +441,48 @@ namespace triton {
     }
 
     void PythonVisitor::operator()(smtAstDistinctNode& e) {
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " != " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstEqualNode& e) {
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " == " << pyOp2.name() << ")" << std::endl;
+
+
     }
 
 
     void PythonVisitor::operator()(smtAstExtractNode& e) {
-      PythonVariable pyOp1;
-      PythonVariable pyResult;
 
       auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // to
       auto op2 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[1]); // from
       auto op3 = e.getChilds()[2];
 
-      if (this->variables.find(op3) != std::end(this->variables)) {
-        pyOp1 = this->variables[op3];
-      } else {
-        this->eval(*op3);
-        pyOp1 = this->variables[op3];
-      }
-
-    if (static_cast<uint32>(op1->getValue() - op2->getValue() + 1) != pyOp1.size()) {
-      uint32 id = this->currentId++;
-      std::string name = "x_" + std::to_string(id);;
-
-      pyResult
-        .setId(id)
-        .setSize(static_cast<uint32>(op1->getValue() - op2->getValue() + 1))
-        .setName(name);
+      auto pyOp1 = this->getPyVariable(op3);
 
 
-        this->variables[&e] = pyResult;
+      if (static_cast<uint32>(op1->getValue() - op2->getValue() + 1) != pyOp1.size()) {
 
-        std::string op1_str = op3->getKind() == BV_NODE ? std::string{pyOp1.value()} : pyOp1.name();
+        auto pyResult = this->addPyVariable(&e, static_cast<uint32>(op1->getValue() - op2->getValue() + 1));
+
         if (op2->getValue() != 0) {
-          result << pyResult.name() << " = (" << op1_str << " >> " << op2->getValue() << ") & mask_" << pyResult.size() << std::endl;
+          result << pyResult.name() << " = (" << pyOp1.name() << " >> " << op2->getValue() << ") & mask_" << pyResult.size() << " # bvextracr" << std::endl;
         } else {
-          result << pyResult.name() << " = " << op1_str << " & mask_" << pyResult.size() << std::endl;
+          result << pyResult.name() << " = " << pyOp1.name() << " & mask_" << pyResult.size() << " # bvextracr" << std::endl;
         }
       } else {
         this->variables[&e] = pyOp1;
@@ -419,23 +491,58 @@ namespace triton {
     }
 
 
+
     void PythonVisitor::operator()(smtAstIteNode& e) {
+
+      // declare variables:
+      auto cond   = e.getChilds()[0];
+      auto itrue  = e.getChilds()[1];
+      auto ifalse = e.getChilds()[2];
+
+
+      auto pyCond = this->getPyVariable(cond);
+      result << "if " << pyCond.name() << " == True :" << std::endl;
+      this->prefix += "\t";
+      auto pyTrue = this->getPyVariable(itrue);
+      this->prefix = "";
+      result << "else:" << std::endl;
+      this->prefix += "\t";
+      auto pyFalse = this->getPyVariable(ifalse);
+
+      this->addPyVariable(&e, 1);
+
+
+
     }
 
 
     void PythonVisitor::operator()(smtAstLandNode& e) {
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, 1);
+      result << pyResult.name() << " = (" << pyOp1.name() << " and " << pyOp2.name() << ")" << std::endl;
     }
 
 
     void PythonVisitor::operator()(smtAstLnotNode& e) {
+      throw std::runtime_error("Lnot to implement");
     }
 
 
     void PythonVisitor::operator()(smtAstLorNode& e) {
+
+      throw std::runtime_error("smtAstLorNode to implement");
     }
 
 
     void PythonVisitor::operator()(smtAstReferenceNode& e) {
+
+      throw std::runtime_error("smtAstReferenceNode to implement");
     }
 
 
@@ -489,7 +596,9 @@ namespace triton {
       auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // size to extend
       auto op2 = e.getChilds()[1];
       auto pyOp2 = getPyVariable(op2);
+
       pyOp2.setSize(pyOp2.size() + static_cast<uint32>(op1->getValue()));
+
       this->variables[op2] = pyOp2;
       this->variables[&e] = pyOp2;
 

@@ -43,6 +43,7 @@ namespace triton {
         std::ostream& result;
         variablesmap variables;
         uint32 currentId;
+        std::string prefix;
 
         PythonVariable& getPyVariable(triton::smt2lib::smtAstAbstractNode* node);
         PythonVariable& addPyVariable(triton::smt2lib::smtAstAbstractNode* node, uint32 size);

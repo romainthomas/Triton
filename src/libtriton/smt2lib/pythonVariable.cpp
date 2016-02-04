@@ -4,8 +4,20 @@ using namespace triton;
 using namespace smt2lib;
 
 
-const std::string& PythonVariable::name(void) const {
-  return this->vName;
+PythonVariable::PythonVariable(void) :
+  vName{""},
+  vId{0},
+  vSize{0},
+  vValue{0},
+  visValue{false}
+{}
+
+std::string PythonVariable::name(void) const {
+  if (this->isValue()) {
+    return std::string{this->vValue};
+  } else {
+    return this->vName;
+  }
 }
 
 
@@ -21,6 +33,11 @@ uint32 PythonVariable::size(void) const {
 uint128 PythonVariable::value(void) const {
   return this->vValue;
 }
+
+bool PythonVariable::isValue(void) const {
+  return this->visValue;
+}
+
 
 PythonVariable& PythonVariable::setName(const std::string& name) {
   this->vName = name;
@@ -41,5 +58,12 @@ PythonVariable& PythonVariable::setSize(uint32 size) {
 
 PythonVariable& PythonVariable::setValue(uint128 value) {
   this->vValue = value;
+  this->visValue = true;
+  return *this;
+}
+
+
+PythonVariable& PythonVariable::setIsValue(bool flag) {
+  this->visValue = flag;
   return *this;
 }
