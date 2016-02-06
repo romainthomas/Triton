@@ -109,7 +109,15 @@ namespace triton {
 
     void PythonVisitor::operator()(smtAstBvlshrNode& e) {
 
-      throw std::runtime_error("smtAstBvlshrNode not implemented");
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
+
+      result << pyResult.name() << " = " << pyOp1.name() << " >> " <<  pyOp2.name()  << " " << std::endl;
     }
 
 
@@ -244,7 +252,18 @@ namespace triton {
 
     void PythonVisitor::operator()(smtAstBvshlNode& e) {
 
-      throw std::runtime_error("smtAstBvshlNode not implemented");
+
+      auto op1 = e.getChilds()[0];
+      auto op2 = e.getChilds()[1];
+
+      auto pyOp1 = this->getPyVariable(op1);
+      auto pyOp2 = this->getPyVariable(op2);
+
+      auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
+
+      result << pyResult.name() << " = (" << pyOp1.name() << " << " <<  pyOp2.name()  << " ) & mask_" << pyResult.size() << std::endl;
+
+      this->maskUsed.insert(pyResult.size());
     }
 
 
@@ -419,7 +438,7 @@ namespace triton {
 
       auto currentVariable = this->getPyVariable(childs[0]);
 
-      result << pyResult.name() << " = ";
+      result << pyResult.name() << " = (";
       result << "(" << currentVariable.name() << " << " << size - currentVariable.size() << ")";
       size -= currentVariable.size();
 
@@ -433,9 +452,10 @@ namespace triton {
           }
           size -= nextVar.size();
       }
-      result << std::endl;
+      result << " ) & mask_" << pyResult.size() <<  std::endl;
       //auto pyResult = this->addPyVariable(&e, size);
 
+      this->maskUsed.insert(pyResult.size());
     }
 
 
