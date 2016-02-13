@@ -50,6 +50,7 @@ namespace triton {
         .setId(id)
         .setSize(size)
         .setName(name);
+
       this->variables[node] = pyResult;
       return this->variables[node];
     }

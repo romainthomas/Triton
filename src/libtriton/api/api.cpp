@@ -297,11 +297,17 @@ namespace triton {
     triton::smt2lib::PythonVisitor pythonvisitor(ss);
     //pythonvisitor.eval(*node);
     auto pyVar = pythonvisitor.getPyVariable(node);
+    stream << "import sys" << std::endl;
 
+    // Define masks used
     for (auto mask : pythonvisitor.maskUsed)
       stream << "mask_" << std::dec << mask << " = (1 << " << mask << ") - 1" << std::endl;
+
+    // Define variables used
+    uint32 i = 0;
     for (auto var : pythonvisitor.variablesUsed)
-      stream << var << " = 0" << std::endl;
+      stream << var << " = int(sys.argv[" << std::dec << ++i << "])" << std::endl;
+
     stream << "def sign_extend(value, bits):" << std::endl;
     stream << "\tsign_bit = 1 << (bits - 1)" << std::endl;
     stream << "\treturn (value & (sign_bit - 1)) - (value & sign_bit)" << std::endl;

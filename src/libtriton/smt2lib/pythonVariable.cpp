@@ -9,7 +9,7 @@ PythonVariable::PythonVariable(void) :
   vId{0},
   vSize{0},
   vValue{0},
-  visValue{false}
+  vIsValue{false}
 {}
 
 std::string PythonVariable::name(void) const {
@@ -35,9 +35,12 @@ uint128 PythonVariable::value(void) const {
 }
 
 bool PythonVariable::isValue(void) const {
-  return this->visValue;
+  return this->vIsValue;
 }
 
+const std::string& PythonVariable::expression(void) const {
+  return this->vExpression;
+}
 
 PythonVariable& PythonVariable::setName(const std::string& name) {
   this->vName = name;
@@ -58,12 +61,20 @@ PythonVariable& PythonVariable::setSize(uint32 size) {
 
 PythonVariable& PythonVariable::setValue(uint128 value) {
   this->vValue = value;
-  this->visValue = true;
+  this->vIsValue = true;
   return *this;
 }
 
 
 PythonVariable& PythonVariable::setIsValue(bool flag) {
-  this->visValue = flag;
+  this->vIsValue = flag;
   return *this;
 }
+
+
+PythonVariable& PythonVariable::setExpression(const std::string& expression) {
+  this->vExpression = expression;
+  return *this;
+}
+
+
