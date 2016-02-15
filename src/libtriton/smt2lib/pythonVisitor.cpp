@@ -81,7 +81,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " + " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " + " <<  pyOp2.name() << ") & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+
       this->maskUsed.insert(pyResult.size());
 
 
@@ -98,7 +104,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      result << pyResult.name() << " = " << pyOp1.name() << " & " <<  pyOp2.name()  << " # bvand" << std::endl;
+      std::stringstream expression;
+      expression << pyOp1.name() << " & " << pyOp2.name();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+
     }
 
 
@@ -118,7 +130,12 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      result << pyResult.name() << " = " << pyOp1.name() << " >> " <<  pyOp2.name()  << " " << std::endl;
+      std::stringstream expression;
+      expression << pyOp1.name() << " >> " <<  pyOp2.name();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -132,7 +149,12 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " * " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " * " <<  pyOp2.name() << ") & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
 
       this->maskUsed.insert(pyResult.size());
     }
@@ -155,7 +177,12 @@ namespace triton {
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
 
-      result << pyResult.name() << " = ~ (" << pyOp1.name() << " & " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      std::stringstream expression;
+      expression << "(~ (" << pyOp1.name() << " & " <<  pyOp2.name() << ")) & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
 
       this->maskUsed.insert(pyResult.size());
     }
@@ -166,7 +193,12 @@ namespace triton {
       auto pyOp1 = this->getPyVariable(op1);
       auto pyResult = this->addPyVariable(&e, pyOp1.size());
 
-      result << pyResult.name() << " = (-" << pyOp1.name()  << ") & mask_" << pyResult.size() << std::endl;
+      std::stringstream expression;
+      expression << "(-" << pyOp1.name()  << ") & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
 
       this->maskUsed.insert(pyResult.size());
 
@@ -184,8 +216,13 @@ namespace triton {
       auto pyOp1 = this->getPyVariable(op1);
       auto pyResult = this->addPyVariable(&e, pyOp1.size());
 
-      result << pyResult.name() << " = (~" << pyOp1.name()  << ") & mask_" << pyResult.size() << std::endl;
 
+      std::stringstream expression;
+      expression << "(~" << pyOp1.name()  << ") & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
       this->maskUsed.insert(pyResult.size());
 
     }
@@ -201,7 +238,12 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " | " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " | " <<  pyOp2.name() << ") & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
       this->maskUsed.insert(pyResult.size());
     }
 
@@ -233,7 +275,13 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " >= " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " >= " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -247,7 +295,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, 1);
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " > " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " > " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -262,8 +316,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " << " <<  pyOp2.name()  << " ) & mask_" << pyResult.size() << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " << " <<  pyOp2.name()  << " ) & mask_" << pyResult.size();
 
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+      this->maskUsed.insert(pyResult.size());
       this->maskUsed.insert(pyResult.size());
     }
 
@@ -277,7 +336,12 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " <= " << pyOp2.name() << ")" << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " <= " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -291,7 +355,12 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, 1);
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " < " << pyOp2.name() << ")" << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " < " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -311,8 +380,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " - " <<  pyOp2.name() << ") & mask_" << pyResult.size();
 
-      result << pyResult.name() << " = " << pyOp1.name() << " - " <<  pyOp2.name() << " & mask_" << pyResult.size() << std::endl;
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+      this->maskUsed.insert(pyResult.size());
       this->maskUsed.insert(pyResult.size());
     }
 
@@ -332,7 +406,13 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " >= " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " >= " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -345,7 +425,13 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " > " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " > " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -358,7 +444,13 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " <= " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " <= " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -371,7 +463,12 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " < " << pyOp2.name() << ")" << std::endl;
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " < " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -397,8 +494,13 @@ namespace triton {
 
       auto pyResult = this->addPyVariable(&e, std::max(pyOp2.size(), pyOp1.size()));
 
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " ^ " <<  pyOp2.name() << ") & mask_" << pyResult.size();
 
-      result << pyResult.name() << " = (" << pyOp1.name() << " ^ " <<  pyOp2.name() << ") & mask_" << pyResult.size() << std::endl;
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+
       this->maskUsed.insert(pyResult.size());
     }
 
@@ -439,22 +541,26 @@ namespace triton {
 
       auto currentVariable = this->getPyVariable(childs[0]);
 
-      result << pyResult.name() << " = (";
-      result << "(" << currentVariable.name() << " << " << size - currentVariable.size() << ")";
+      std::stringstream expression;
+      expression << "(";
+      expression << "(" << currentVariable.name() << " << " << size - currentVariable.size() << ")";
       size -= currentVariable.size();
 
       //Child[0] is the LSB
       for (idx = 1; idx < childs.size(); idx++) {
           auto nextVar = this->getPyVariable(childs[idx]);
           if (size - nextVar.size() != 0) {
-            result << " | (" << nextVar.name() << " << " << size - nextVar.size() << ")";
+            expression << " | (" << nextVar.name() << " << " << size - nextVar.size() << ")";
           } else {
-            result << " | " << nextVar.name();
+            expression << " | " << nextVar.name();
           }
           size -= nextVar.size();
       }
-      result << " ) & mask_" << pyResult.size() <<  std::endl;
-      //auto pyResult = this->addPyVariable(&e, size);
+      expression << " ) & mask_" << pyResult.size();
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
 
       this->maskUsed.insert(pyResult.size());
     }
@@ -477,7 +583,14 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " != " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " != " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+
     }
 
 
@@ -489,9 +602,13 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " == " << pyOp2.name() << ")" << std::endl;
 
+      std::stringstream expression;
+      expression << "(" << pyOp1.name() << " == " << pyOp2.name() << ")";
 
+      pyResult.setExpression(expression.str());
+
+      result << pyResult.name() << " = " << expression.str() << std::endl;
     }
 
 
@@ -506,10 +623,17 @@ namespace triton {
       if (static_cast<uint32>(op1->getValue() - op2->getValue() + 1) != pyOp1.size()) {
         auto pyResult = this->addPyVariable(&e, static_cast<uint32>(op1->getValue() - op2->getValue() + 1));
 
+        std::stringstream expression;
+
         if (op2->getValue() != 0) {
-          result << pyResult.name() << " = (" << pyOp1.name() << " >> " << op2->getValue() << ") & mask_" << pyResult.size()  << std::endl;
+          expression << "(" << pyOp1.name() << " >> " << op2->getValue() << ") & mask_" << pyResult.size();
+          pyResult.setExpression(expression.str());
+          result << pyResult.name() << " = " << expression.str() << std::endl;
+
         } else {
-          result << pyResult.name() << " = " << pyOp1.name() << " & mask_" << pyResult.size() << std::endl;
+          expression << pyOp1.name() << " & mask_" << pyResult.size();
+          pyResult.setExpression(expression.str());
+          result << pyResult.name() << " = " << expression.str() << std::endl;
         }
 
         this->maskUsed.insert(pyResult.size());
@@ -533,8 +657,11 @@ namespace triton {
       auto pyFalse = this->getPyVariable(ifalse);
       auto pyResult = this->addPyVariable(&e, 1);
 
-      result << pyResult.name() << " = " << pyTrue.name() << " if " << pyCond.name() << " else " << pyFalse.name() << std::endl;
+      std::stringstream expression;
+      expression << pyTrue.name() << " if " << pyCond.name() << " else " << pyFalse.name();
 
+      pyResult.setExpression(expression.str());
+      result << pyResult.name() << " = " << expression.str() << std::endl;
 
     }
 
@@ -548,7 +675,13 @@ namespace triton {
       auto pyOp2 = this->getPyVariable(op2);
 
       auto pyResult = this->addPyVariable(&e, 1);
-      result << pyResult.name() << " = (" << pyOp1.name() << " and " << pyOp2.name() << ")" << std::endl;
+
+      std::stringstream expression;
+      expression <<  "(" << pyOp1.name() << " and " << pyOp2.name() << ")";
+
+      pyResult.setExpression(expression.str());
+      result << pyResult.name() << " = " << expression.str() << std::endl;
+
     }
 
 
@@ -584,7 +717,11 @@ namespace triton {
       uint32 size = pyOp2.size() + static_cast<uint32>(op1->getValue());
       auto pyResult = addPyVariable(&e, size);
 
-      result << pyResult.name() << " = sign_extend(" << pyOp2.name() << ", " << size << ")" << std::endl;
+      std::stringstream expression;
+      expression << "sign_extend(" << pyOp2.name() << ", " << size << ")";
+
+      pyResult.setExpression(expression.str());
+      result << pyResult.name() << " = " << expression.str() << std::endl;
 
 #else
       auto op1 = reinterpret_cast<smtAstDecimalNode*>(e.getChilds()[0]); // size to extend
