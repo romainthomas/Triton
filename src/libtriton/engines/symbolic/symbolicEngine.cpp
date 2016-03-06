@@ -115,9 +115,6 @@ namespace triton {
         this->symbolicVariables           = other.symbolicVariables;
         this->uniqueSymExprId             = other.uniqueSymExprId;
         this->uniqueSymVarId              = other.uniqueSymVarId;
-        #ifdef TRITON_PYTHON_BINDINGS
-        this->pySimplificationCallbacks   = other.pySimplificationCallbacks;
-        #endif
       }
 
 

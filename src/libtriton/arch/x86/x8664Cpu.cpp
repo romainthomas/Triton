@@ -15,12 +15,6 @@
 #include <x8664Cpu.hpp>
 #include <x86Specifications.hpp>
 
-#ifdef TRITON_PYTHON_BINDINGS
-  #include <pythonBindings.hpp>
-#endif
-
-
-
 namespace triton {
   namespace arch {
     namespace x86 {
@@ -217,15 +211,6 @@ namespace triton {
       triton::arch::x86::x86_reg_tf     = triton::arch::RegisterOperand(triton::arch::x86::ID_REG_TF);
       triton::arch::x86::x86_reg_zf     = triton::arch::RegisterOperand(triton::arch::x86::ID_REG_ZF);
 
-      /* Update python env ======================================================== */
-      #ifdef TRITON_PYTHON_BINDINGS
-        triton::bindings::python::initRegNamespace();
-        triton::bindings::python::initCpuSizeNamespace();
-        triton::bindings::python::initX86OpcodesNamespace();
-        #ifdef __unix__
-          triton::bindings::python::initSyscallNamespace();
-        #endif
-      #endif
     }
 
 

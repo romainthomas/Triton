@@ -44,6 +44,10 @@ if(${TRITON_PYTHON_BINDINGS} MATCHES "no")
     remove_definitions(-DTRITON_PYTHON_BINDINGS)
 endif()
 
+# Define pybind11 headers
+set(PYBIND11_HEADERS_FILES "${CMAKE_SOURCE_DIR}/src/pybind11")
+include_directories(${PYBIND11_HEADERS_FILES})
+
 
 # Pintool option
 if(${PINTOOL} MATCHES "yes")
@@ -315,10 +319,11 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 set_target_properties(${PROJECT_LIBTRITON} PROPERTIES COMPILE_FLAGS ${LIBTRITON_CXX_FLAGS})
 
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/libtriton/bindings/python)
+
 # Link Triton's dependencies
 target_link_libraries(
     ${PROJECT_LIBTRITON}
-    ${PYTHON_LIBRARIES}
     ${Boost_LIBRARIES}
     ${Z3_LIBRARIES}
     ${CAPSTONE_LIBRARIES}
@@ -384,13 +389,13 @@ endif(${PINTOOL} MATCHES "yes")
 
 # add the install targets
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(TRITON_HEADER_INSTALL /usr/include/triton)
-    set(TRITON_LIB_INSTALL /lib)
+    set(TRITON_HEADER_INSTALL ${CMAKE_INSTALL_PREFIX}/include/triton)
+    set(TRITON_LIB_INSTALL ${CMAKE_INSTALL_PREFIX}/lib)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(TRITON_HEADER_INSTALL /usr/local/include/triton)
-    set(TRITON_LIB_INSTALL /usr/local/lib)
+    set(TRITON_HEADER_INSTALL ${CMAKE_INSTALL_PREFIX}/include/triton)
+    set(TRITON_LIB_INSTALL ${CMAKE_INSTALL_PREFIX}/lib)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")

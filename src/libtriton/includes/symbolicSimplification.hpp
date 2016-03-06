@@ -59,11 +59,6 @@ namespace triton {
           //! List of simplification callbacks. These callbacks will be called before assigning a symbolic expression to a register or part of memory.
           std::list<triton::engines::symbolic::sfp> simplificationCallbacks;
 
-          #ifdef TRITON_PYTHON_BINDINGS
-          //! List of simplification callbacks python. These callbacks will be called before assigning a symbolic expression to a register or part of memory.
-          std::list<PyObject*> pySimplificationCallbacks;
-          #endif
-
         public:
           //! Constructor.
           SymbolicSimplification();
@@ -80,18 +75,8 @@ namespace triton {
           //! Records a simplification callback.
           void recordSimplificationCallback(triton::engines::symbolic::sfp cb);
 
-          #ifdef TRITON_PYTHON_BINDINGS
-          //! Records a simplification callback.
-          void recordSimplificationCallback(PyObject* cb);
-          #endif
-
           //! Removes a simplification callback.
           void removeSimplificationCallback(triton::engines::symbolic::sfp cb);
-
-          #ifdef TRITON_PYTHON_BINDINGS
-          //! Removes a simplification callback.
-          void removeSimplificationCallback(PyObject* cb);
-          #endif
 
           //! Processes all recorded simplifications. Returns the simplified node.
           triton::ast::AbstractNode* processSimplification(triton::ast::AbstractNode* node, bool z3=false);

@@ -8,13 +8,6 @@
 #include <stdexcept>
 #include <symbolicOptimization.hpp>
 
-#ifdef TRITON_PYTHON_BINDINGS
-  #include <pythonObjects.hpp>
-  #include <pythonXFunctions.hpp>
-#endif
-
-
-
 namespace triton {
   namespace engines {
     namespace symbolic {
