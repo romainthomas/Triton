@@ -20,6 +20,7 @@ template <typename T> struct arg_t;
 struct arg {
     arg(const char *name) : name(name) { }
     template <typename T> arg_t<T> operator=(const T &value);
+    template <typename T, size_t N> arg_t<const T *> operator=(T const (&value)[N]);
     const char *name;
 };
 
@@ -32,9 +33,15 @@ template <typename T> struct arg_t : public arg {
 };
 
 template <typename T> arg_t<T> arg::operator=(const T &value) { return arg_t<T>(name, value); }
+template <typename T, size_t N> arg_t<const T *> arg::operator=(T const (&value)[N]) {
+    return operator=((const T *) value);
+}
 
 /// Annotation for methods
 struct is_method { handle class_; is_method(const handle &c) : class_(c) { } };
+
+/// Annotation for parent scope
+struct scope { handle value; scope(const handle &s) : value(s) { } };
 
 /// Annotation for documentation
 struct doc { const char *value; doc(const char *value) : value(value) { } };
@@ -104,6 +111,9 @@ struct function_record {
 
     /// Python handle to the associated class (if this is method)
     handle class_;
+
+    /// Python handle to the parent scope (a class or a module)
+    handle scope;
 
     /// Python handle to the sibling function representing an overload chain
     handle sibling;
@@ -190,8 +200,14 @@ template <> struct process_attribute<sibling> : process_attribute_default<siblin
 
 /// Process an attribute which indicates that this function is a method
 template <> struct process_attribute<is_method> : process_attribute_default<is_method> {
-    static void init(const is_method &s, function_record *r) { r->class_ = s.class_; }
+    static void init(const is_method &s, function_record *r) { r->class_ = s.class_; r->scope = s.class_; }
 };
+
+/// Process an attribute which indicates the parent scope of a method
+template <> struct process_attribute<scope> : process_attribute_default<scope> {
+    static void init(const scope &s, function_record *r) { r->scope = s.value; }
+};
+
 
 /// Process a keyword argument attribute (*without* a default value)
 template <> struct process_attribute<arg> : process_attribute_default<arg> {
@@ -213,11 +229,21 @@ struct process_attribute<arg_t<T>> : process_attribute_default<arg_t<T>> {
         object o = object(detail::type_caster<typename detail::intrinsic_type<T>::type>::cast(
                 a.value, return_value_policy::automatic, handle()), false);
 
-        if (!o)
-            pybind11_fail("arg(): could not convert default keyword "
-                          "argument into a Python object (type not "
-                          "registered yet?)");
-
+        if (!o) {
+#if !defined(NDEBUG)
+            std::string descr(typeid(T).name());
+            detail::clean_type_id(descr);
+            if (r->class_)
+                descr += " in method of " + (std::string) r->class_.str();
+            pybind11_fail("arg(): could not convert default keyword argument "
+                          "of type " + descr +
+                          " into a Python object (type not registered yet?)");
+#else
+            pybind11_fail("arg(): could not convert default keyword argument "
+                          "into a Python object (type not registered yet?). "
+                          "Compile in debug mode for more information.");
+#endif
+        }
         r->args.emplace_back(a.name, a.descr, o.release());
     }
 };
@@ -251,7 +277,7 @@ template <int Nurse, int Patient> struct process_attribute<keep_alive<Nurse, Pat
 };
 
 /// Ignore that a variable is unused in compiler warnings
-template<class T> void ignore_unused(const T&) { }
+inline void ignore_unused(const int *) { }
 
 /// Recursively iterate over variadic template arguments
 template <typename... Args> struct process_attributes {

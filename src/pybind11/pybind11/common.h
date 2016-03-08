@@ -71,6 +71,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <memory>
+#include <typeindex>
 
 #if PY_MAJOR_VERSION >= 3 /// Compatibility macros for various Python versions
 #define PYBIND11_INSTANCE_METHOD_NEW(ptr, class_) PyInstanceMethod_New(ptr)
@@ -109,6 +110,10 @@
 #endif
 
 #define PYBIND11_TRY_NEXT_OVERLOAD ((PyObject *) 1) // special failure return code
+#define PYBIND11_STRINGIFY(x) #x
+#define PYBIND11_TOSTRING(x) PYBIND11_STRINGIFY(x)
+#define PYBIND11_INTERNALS_ID "__pybind11_" \
+    PYBIND11_TOSTRING(PYBIND11_VERSION_MAJOR) "_" PYBIND11_TOSTRING(PYBIND11_VERSION_MINOR) "__"
 
 #define PYBIND11_PLUGIN(name) \
     static PyObject *pybind11_init(); \
@@ -148,7 +153,7 @@ enum class return_value_policy : int {
 
 /// Format strings for basic number types
 template <typename type> struct format_descriptor { };
-#define PYBIND11_DECL_FMT(t, n) template<> struct format_descriptor<t> { static std::string value() { return n; }; };
+#define PYBIND11_DECL_FMT(t, n) template<> struct format_descriptor<t> { static std::string value() { return n; }; }
 PYBIND11_DECL_FMT(int8_t,  "b"); PYBIND11_DECL_FMT(uint8_t,  "B"); PYBIND11_DECL_FMT(int16_t, "h"); PYBIND11_DECL_FMT(uint16_t, "H");
 PYBIND11_DECL_FMT(int32_t, "i"); PYBIND11_DECL_FMT(uint32_t, "I"); PYBIND11_DECL_FMT(int64_t, "q"); PYBIND11_DECL_FMT(uint64_t, "Q");
 PYBIND11_DECL_FMT(float,   "f"); PYBIND11_DECL_FMT(double,   "d"); PYBIND11_DECL_FMT(bool,    "?");
@@ -216,9 +221,9 @@ struct overload_hash {
 
 /// Internal data struture used to track registered instances and types
 struct internals {
-    std::unordered_map<const void *, void*> registered_types_cpp; // std::type_info* -> type_info
-    std::unordered_map<const void *, void*> registered_types_py;  // PyTypeObject* -> type_info
-    std::unordered_map<const void *, void*> registered_instances; // void * -> PyObject*
+    std::unordered_map<std::type_index, void*> registered_types_cpp; // std::type_index -> type_info
+    std::unordered_map<const void *, void*> registered_types_py;     // PyTypeObject* -> type_info
+    std::unordered_map<const void *, void*> registered_instances;    // void * -> PyObject*
     std::unordered_set<std::pair<const PyObject *, const char *>, overload_hash> inactive_overload_cache;
 };
 

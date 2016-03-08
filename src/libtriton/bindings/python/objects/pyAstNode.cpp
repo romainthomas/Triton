@@ -18,8 +18,7 @@ void init_AstNode_class(py::module& m) {
     //.def("isSigned",
     //.def("isSymbolized",
     //.def("setChild"
-    .def("__add__", [](triton::ast::AbstractNode *a, triton::ast::AbstractNode *b) { return triton::ast::bvadd(a, b) });
-})
+    .def("__add__", [](triton::ast::AbstractNode *a, triton::ast::AbstractNode *b) { return triton::ast::bvadd(a, b); });
 
   //py::implicitly_convertible<std::weak_ptr<LIEF::Section>, ELF::Section>();
 

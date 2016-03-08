@@ -34,12 +34,13 @@ PYBIND11_NOINLINE inline internals &get_internals() {
     if (internals_ptr)
         return *internals_ptr;
     handle builtins(PyEval_GetBuiltins());
-    capsule caps(builtins["__pybind11__"]);
+    const char *id = PYBIND11_INTERNALS_ID;
+    capsule caps(builtins[id]);
     if (caps.check()) {
         internals_ptr = caps;
     } else {
         internals_ptr = new internals();
-        builtins["__pybind11__"] = capsule(internals_ptr);
+        builtins[id] = capsule(internals_ptr);
     }
     return *internals_ptr;
 }
@@ -59,20 +60,9 @@ PYBIND11_NOINLINE inline detail::type_info* get_type_info(PyTypeObject *type) {
 PYBIND11_NOINLINE inline detail::type_info *get_type_info(const std::type_info &tp) {
     auto &types = get_internals().registered_types_cpp;
 
-    auto it = types.find(&tp);
-    if (it != types.end()) {
+    auto it = types.find(std::type_index(tp));
+    if (it != types.end())
         return (detail::type_info *) it->second;
-    } else {
-        /* Unknown type?! Since std::type_info* often varies across
-           module boundaries, the following does an explicit check */
-        for (auto const &type : types) {
-            auto *first = (const std::type_info *) type.first;
-            if (strcmp(first->name(), tp.name()) == 0) {
-                types[&tp] = type.second;
-                return (detail::type_info *) type.second;
-            }
-        }
-    }
     return nullptr;
 }
 
@@ -113,7 +103,10 @@ public:
     PYBIND11_NOINLINE bool load(handle src, bool convert) {
         if (!src || !typeinfo)
             return false;
-        if (PyType_IsSubtype(Py_TYPE(src.ptr()), typeinfo->type)) {
+        if (src.ptr() == Py_None) {
+            value = nullptr;
+            return true;
+        } else if (PyType_IsSubtype(Py_TYPE(src.ptr()), typeinfo->type)) {
             value = ((instance<void> *) src.ptr())->value;
             return true;
         }
@@ -144,7 +137,7 @@ public:
         if (it_instance != internals.registered_instances.end() && !dont_cache)
             return handle((PyObject *) it_instance->second).inc_ref();
 
-        auto it = internals.registered_types_cpp.find(type_info);
+        auto it = internals.registered_types_cpp.find(std::type_index(*type_info));
         if (it == internals.registered_types_cpp.end()) {
             std::string tname = type_info->name();
             detail::clean_type_id(tname);
@@ -508,10 +501,12 @@ public:
     using type_caster<type>::copy_constructor;
 
     bool load(handle src, bool convert) {
-        if (!src || !typeinfo)
+        if (!src || !typeinfo) {
             return false;
-
-        if (PyType_IsSubtype(Py_TYPE(src.ptr()), typeinfo->type)) {
+        } else if (src.ptr() == Py_None) {
+            value = nullptr;
+            return true;
+        } else if (PyType_IsSubtype(Py_TYPE(src.ptr()), typeinfo->type)) {
             auto inst = (instance<type, holder_type> *) src.ptr();
             value = inst->value;
             holder = inst->holder;
@@ -530,8 +525,15 @@ public:
 
     explicit operator type*() { return this->value; }
     explicit operator type&() { return *(this->value); }
-    explicit operator holder_type&() { return holder; }
     explicit operator holder_type*() { return &holder; }
+
+    // Workaround for Intel compiler bug
+    // see pybind11 issue 94
+    #if defined(__ICC) || defined(__INTEL_COMPILER)
+    operator holder_type&() { return holder; }
+    #else
+    explicit operator holder_type&() { return holder; }
+    #endif
 
     static handle cast(const holder_type &src, return_value_policy policy, handle parent) {
         return type_caster_generic::cast(
@@ -566,7 +568,7 @@ template <typename T> inline T cast(handle handle) {
     detail::type_caster<typename detail::intrinsic_type<T>::type> conv;
     if (!conv.load(handle, true))
         throw cast_error("Unable to cast Python object to C++ type");
-    return conv;
+    return (T) conv;
 }
 
 template <typename T> inline object cast(const T &value, return_value_policy policy = return_value_policy::automatic, handle parent = handle()) {
@@ -575,7 +577,7 @@ template <typename T> inline object cast(const T &value, return_value_policy pol
     return object(detail::type_caster<typename detail::intrinsic_type<T>::type>::cast(value, policy, parent), false);
 }
 
-template <typename T> inline T handle::cast() const { return pybind11::cast<T>(m_ptr); }
+template <typename T> inline T handle::cast() const { return pybind11::cast<T>(*this); }
 template <> inline void handle::cast() const { return; }
 
 template <typename... Args> inline object handle::call(Args&&... args_) const {

@@ -17,6 +17,9 @@
 #  pragma warning(disable: 4996) // warning C4996: The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name
 #  pragma warning(disable: 4100) // warning C4100: Unreferenced formal parameter
 #  pragma warning(disable: 4512) // warning C4512: Assignment operator was implicitly defined as deleted
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+#  pragma warning(push)
+#  pragma warning(disable:2196)  // warning #2196: routine is both "inline" and "noinline"
 #elif defined(__GNUG__) and !defined(__clang__)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
@@ -204,7 +207,7 @@ protected:
                 const std::type_info *t = types[type_index++];
                 if (!t)
                     pybind11_fail("Internal error while parsing type signature (1)");
-                auto it = registered_types.find(t);
+                auto it = registered_types.find(std::type_index(*t));
                 if (it != registered_types.end()) {
                     signature += ((const detail::type_info *) it->second)->type->tp_name;
                 } else {
@@ -263,10 +266,19 @@ protected:
             rec->def->ml_name = rec->name;
             rec->def->ml_meth = reinterpret_cast<PyCFunction>(*dispatcher);
             rec->def->ml_flags = METH_VARARGS | METH_KEYWORDS;
+
             capsule rec_capsule(rec, [](PyObject *o) {
                 destruct((detail::function_record *) PyCapsule_GetPointer(o, nullptr));
             });
-            m_ptr = PyCFunction_New(rec->def, rec_capsule.ptr());
+
+            object scope_module;
+            if (rec->scope) {
+                scope_module = (object) rec->scope.attr("__module__");
+                if (!scope_module)
+                    scope_module = (object) rec->scope.attr("__name__");
+            }
+
+            m_ptr = PyCFunction_NewEx(rec->def, rec_capsule.ptr(), scope_module.ptr());
             if (!m_ptr)
                 pybind11_fail("cpp_function::cpp_function(): Could not allocate function object");
         } else {
@@ -467,7 +479,7 @@ public:
     template <typename Func, typename... Extra>
     module &def(const char *name_, Func &&f, const Extra& ... extra) {
         cpp_function func(std::forward<Func>(f), name(name_),
-                          sibling((handle) attr(name_)), extra...);
+                          sibling((handle) attr(name_)), scope(*this), extra...);
         /* PyModule_AddObject steals a reference to 'func' */
         PyModule_AddObject(ptr(), name_, func.inc_ref().ptr());
         return *this;
@@ -524,7 +536,7 @@ protected:
         tinfo->type = (PyTypeObject *) type;
         tinfo->type_size = rec->type_size;
         tinfo->init_holder = rec->init_holder;
-        internals.registered_types_cpp[rec->type] = tinfo;
+        internals.registered_types_cpp[std::type_index(*(rec->type))] = tinfo;
         internals.registered_types_py[type] = tinfo;
 
         auto scope_module = (object) rec->scope.attr("__module__");
@@ -742,7 +754,7 @@ public:
     template <typename Func, typename... Extra> class_ &
     def_static(const char *name_, Func f, const Extra&... extra) {
         cpp_function cf(std::forward<Func>(f), name(name_),
-                        sibling(attr(name_)), extra...);
+                        sibling(attr(name_)), scope(*this), extra...);
         attr(cf.name()) = cf;
         return *this;
     }
@@ -800,8 +812,8 @@ public:
     template <typename D, typename... Extra>
     class_ &def_readwrite_static(const char *name, D *pm, const Extra& ...extra) {
         cpp_function fget([pm](object) -> const D &{ return *pm; },
-                          return_value_policy::reference_internal, extra...),
-                     fset([pm](object, const D &value) { *pm = value; }, extra...);
+                          return_value_policy::reference_internal, scope(*this), extra...),
+                     fset([pm](object, const D &value) { *pm = value; }, scope(*this), extra...);
         def_property_static(name, fget, fset);
         return *this;
     }
@@ -809,7 +821,7 @@ public:
     template <typename D, typename... Extra>
     class_ &def_readonly_static(const char *name, const D *pm, const Extra& ...extra) {
         cpp_function fget([pm](object) -> const D &{ return *pm; },
-                          return_value_policy::reference_internal, extra...);
+                          return_value_policy::reference_internal, scope(*this), extra...);
         def_property_readonly_static(name, fget);
         return *this;
     }
@@ -844,7 +856,7 @@ public:
 
     template <typename target> class_ alias() {
         auto &instances = pybind11::detail::get_internals().registered_types_cpp;
-        instances[&typeid(target)] = instances[&typeid(type)];
+        instances[std::type_index(typeid(target))] = instances[std::type_index(typeid(type))];
         return *this;
     }
 private:
@@ -963,7 +975,7 @@ PYBIND11_NOINLINE inline void keep_alive_impl(int Nurse, int Patient, handle arg
 
 NAMESPACE_END(detail)
 
-template <typename... Args> detail::init<Args...> init() { return detail::init<Args...>(); };
+template <typename... Args> detail::init<Args...> init() { return detail::init<Args...>(); }
 
 template <typename InputType, typename OutputType> void implicitly_convertible() {
     auto implicit_caster = [](PyObject *obj, PyTypeObject *type) -> PyObject * {
@@ -976,13 +988,14 @@ template <typename InputType, typename OutputType> void implicitly_convertible()
             PyErr_Clear();
         return result;
     };
-    auto & registered_types = detail::get_internals().registered_types_cpp;
-    auto it = registered_types.find(&typeid(OutputType));
+    auto &registered_types = detail::get_internals().registered_types_cpp;
+    auto it = registered_types.find(std::type_index(typeid(OutputType)));
     if (it == registered_types.end())
         pybind11_fail("implicitly_convertible: Unable to find type " + type_id<OutputType>());
     ((detail::type_info *) it->second)->implicit_conversions.push_back(implicit_caster);
 }
 
+#if defined(WITH_THREAD)
 inline void init_threading() { PyEval_InitThreads(); }
 
 class gil_scoped_acquire {
@@ -998,6 +1011,7 @@ public:
     inline gil_scoped_release() { state = PyEval_SaveThread(); }
     inline ~gil_scoped_release() { PyEval_RestoreThread(state); }
 };
+#endif
 
 inline function get_overload(const void *this_ptr, const char *name)  {
     handle py_object = detail::get_object_handle(this_ptr);
@@ -1029,7 +1043,7 @@ inline function get_overload(const void *this_ptr, const char *name)  {
         pybind11::gil_scoped_acquire gil; \
         pybind11::function overload = pybind11::get_overload(this, #name); \
         if (overload) \
-            return overload.call(__VA_ARGS__).cast<ret_type>();  }
+            return overload.call(__VA_ARGS__).template cast<ret_type>();  }
 
 #define PYBIND11_OVERLOAD(ret_type, class_name, name, ...) \
     PYBIND11_OVERLOAD_INT(ret_type, class_name, name, __VA_ARGS__) \
@@ -1042,6 +1056,8 @@ inline function get_overload(const void *this_ptr, const char *name)  {
 NAMESPACE_END(pybind11)
 
 #if defined(_MSC_VER)
+#  pragma warning(pop)
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
 #  pragma warning(pop)
 #elif defined(__GNUG__) and !defined(__clang__)
 #  pragma GCC diagnostic pop

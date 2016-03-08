@@ -6,6 +6,7 @@
 #include <immediateOperand.hpp>
 #include <memoryOperand.hpp>
 #include <registerOperand.hpp>
+#include <ast.hpp>
 
 #ifdef __unix__
   #include <python2.7/Python.h>
@@ -395,22 +396,331 @@ void init_Triton_Callbacks(py::module& m) {
 
 
 
+  m.def("getSymbolicVariableFromId",
+      [] (triton::__uint symVarId)
+      {
+        return triton::api.getSymbolicVariableFromId(symVarId);
+      }, py::arg("symVarId"));
+
+
+  m.def("getSymbolicVariableFromName",
+      [] (std::string& symVarName)
+      {
+        return triton::api.getSymbolicVariableFromName(symVarName);
+      }, py::arg("symVarName"));
+
+
+  m.def("getSymbolicVariables",
+      [] (void)
+      {
+        return triton::api.getSymbolicVariables();
+      });
+
+
+  m.def("getTaintedSymbolicExpressions",
+      [] (void)
+      {
+        return triton::api.getTaintedSymbolicExpressions();
+      });
+
+
+  m.def("isMemoryTainted",
+      [] (triton::__uint addr)
+      {
+        return triton::api.isMemoryTainted(addr);
+      }, py::arg("addr"));
+
+
+  m.def("isArchitectureValid",
+      [] (void)
+      {
+        return triton::api.isArchitectureValid();
+      });
+
+
+  m.def("isMemoryTainted",
+      [] (triton::arch::MemoryOperand& mem)
+      {
+        return triton::api.isMemoryTainted(mem);
+      }, py::arg("mem"));
+
+
+  m.def("isRegisterTainted",
+      [] (triton::arch::RegisterOperand& reg)
+      {
+        return triton::api.isRegisterTainted(reg);
+      }, py::arg("reg"));
 
 
 
+  m.def("isSymbolicEngineEnabled",
+      [] (void)
+      {
+        return triton::api.isSymbolicEngineEnabled();
+      });
 
 
+  m.def("isSymbolicOptimizationEnabled",
+      [] (enum triton::engines::symbolic::optimization_e opti)
+      {
+        return triton::api.isSymbolicOptimizationEnabled(static_cast<enum triton::engines::symbolic::optimization_e>(opti));
+      }, py::arg("opti"));
 
 
+  m.def("isTaintEngineEnabled",
+      [] (void)
+      {
+        return triton::api.isTaintEngineEnabled();
+      });
 
 
+  m.def("isTaintEngineEnabled",
+      [] (void)
+      {
+        return triton::api.isTaintEngineEnabled();
+      });
 
 
+  m.def("processing",
+      [] (triton::arch::Instruction& inst)
+      {
+        return triton::api.processing(inst);
+      }, py::arg("inst"));
 
 
-  m.def("setArchitecture", [] (triton::uint32 arch)
+  //m.def("recordSimplificationCallback",
+  //    [] (triton::engines::symbolic::sfp cb)
+  //    {
+  //      triton::api.recordSimplificationCallback(cb);
+  //    }, py::arg("cb"));
+
+
+  ////TODO: Python argument
+
+
+  //m.def("removeSimplificationCallback",
+  //    [] (triton::engines::symbolic::sfp cb)
+  //    {
+  //      triton::api.removeSimplificationCallback(cb);
+  //    }, py::arg("cb"));
+
+
+  m.def("resetEngines",
+      [] (void)
+      {
+        triton::api.resetEngines();
+      });
+
+
+  m.def("setArchitecture",
+      [] (triton::uint32 arch)
       {
         triton::api.setArchitecture(arch);
       },
       py::arg("arch"));
+
+
+  m.def("setLastMemoryValue",
+      [] (triton::__uint addr, triton::uint8 value)
+      {
+        triton::api.setLastMemoryValue(addr, value);
+      },
+      py::arg("addr"), py::arg("value"));
+
+
+  m.def("setLastMemoryValue",
+      [] (triton::arch::MemoryOperand& mem)
+      {
+        triton::api.setLastMemoryValue(mem);
+      },
+      py::arg("mem"));
+
+
+  m.def("setLastRegisterValue",
+      [] (triton::arch::RegisterOperand& reg)
+      {
+        triton::api.setLastRegisterValue(reg);
+      },
+      py::arg("reg"));
+
+
+  m.def("setTaintMemory",
+      [] (triton::arch::MemoryOperand& mem, bool flag)
+      {
+        return triton::api.setTaintMemory(mem, flag);
+      },
+      py::arg("mem"), py::arg("flag"));
+
+
+  m.def("setTaintRegister",
+      [] (triton::arch::RegisterOperand& reg, bool flag)
+      {
+        return triton::api.setTaintRegister(reg, flag);
+      },
+      py::arg("reg"), py::arg("flag"));
+
+
+  m.def("simplify",
+      [] (triton::ast::AbstractNode* node)
+      {
+        return triton::api.processSimplification(node);
+      },
+      py::arg("node"));
+
+
+  m.def("taintMemory",
+      [] (triton::__uint addr)
+      {
+        return triton::api.taintMemory(addr);
+      },
+      py::arg("addr"));
+
+
+  m.def("taintAssignmentMemoryImmediate",
+      [] (triton::arch::MemoryOperand& memDst)
+      {
+        return triton::api.taintAssignmentMemoryImmediate(memDst);
+      },
+      py::arg("memDst"));
+
+
+  m.def("taintAssignmentMemoryMemory",
+      [] (triton::arch::MemoryOperand& memDst, triton::arch::MemoryOperand& memSrc)
+      {
+        return triton::api.taintAssignmentMemoryMemory(memDst, memSrc);
+      },
+      py::arg("memDst"), py::arg("memSrc"));
+
+
+  m.def("taintAssignmentMemoryRegister",
+      [] (triton::arch::MemoryOperand& memDst, triton::arch::RegisterOperand& regSrc)
+      {
+        return triton::api.taintAssignmentMemoryRegister(memDst, regSrc);
+      },
+      py::arg("memDst"), py::arg("regSrc"));
+
+
+  m.def("taintAssignmentRegisterImmediate",
+      [] (triton::arch::RegisterOperand& regDst)
+      {
+        return triton::api.taintAssignmentRegisterImmediate(regDst);
+      },
+      py::arg("regDst"));
+
+
+  m.def("taintAssignmentRegisterMemory",
+      [] (triton::arch::RegisterOperand& regDst, triton::arch::MemoryOperand& memSrc)
+      {
+        return triton::api.taintAssignmentRegisterMemory(regDst, memSrc);
+      },
+      py::arg("regDst"), py::arg("memSrc"));
+
+
+  m.def("taintAssignmentRegisterRegister",
+      [] (triton::arch::RegisterOperand& regDst, triton::arch::RegisterOperand& regSrc)
+      {
+        return triton::api.taintAssignmentRegisterRegister(regDst, regSrc);
+      },
+      py::arg("regDst"), py::arg("regSrc"));
+
+
+  m.def("taintMemory",
+      [] (triton::arch::MemoryOperand& mem)
+      {
+        return triton::api.taintMemory(mem);
+      },
+      py::arg("mem"));
+
+
+  m.def("taintRegister",
+      [] (triton::arch::RegisterOperand& reg)
+      {
+        return triton::api.taintRegister(reg);
+      },
+      py::arg("reg"));
+
+
+
+  m.def("taintUnionMemoryImmediate",
+      [] (triton::arch::MemoryOperand& memDst)
+      {
+        return triton::api.taintUnionMemoryImmediate(memDst);
+      },
+      py::arg("memDst"));
+
+
+  m.def("taintUnionMemoryMemory",
+      [] (triton::arch::MemoryOperand& memDst, triton::arch::MemoryOperand& memSrc)
+      {
+        return triton::api.taintUnionMemoryMemory(memDst, memSrc);
+      },
+      py::arg("memDst"), py::arg("memSrc"));
+
+
+  m.def("taintUnionMemoryRegister",
+      [] (triton::arch::MemoryOperand& memDst, triton::arch::RegisterOperand& regSrc)
+      {
+        return triton::api.taintUnionMemoryRegister(memDst, regSrc);
+      },
+      py::arg("memDst"), py::arg("regSrc"));
+
+
+  m.def("taintUnionRegisterImmediate",
+      [] (triton::arch::RegisterOperand& regDst)
+      {
+        return triton::api.taintUnionRegisterImmediate(regDst);
+      },
+      py::arg("regDst"));
+
+
+
+  m.def("taintUnionRegisterMemory",
+      [] (triton::arch::RegisterOperand& regDst, triton::arch::MemoryOperand& memSrc)
+      {
+        return triton::api.taintUnionRegisterMemory(regDst, memSrc);
+      },
+      py::arg("regDst"), py::arg("memSrc"));
+
+
+  m.def("taintUnionRegisterRegister",
+      [] (triton::arch::RegisterOperand& regDst, triton::arch::RegisterOperand& regSrc)
+      {
+        return triton::api.taintUnionRegisterRegister(regDst, regSrc);
+      },
+      py::arg("regDst"), py::arg("regSrc"));
+
+
+  m.def("untaintMemory",
+      [] (triton::__uint addr)
+      {
+        return triton::api.untaintMemory(addr);
+      },
+      py::arg("addr"));
+
+
+  m.def("untaintMemory",
+      [] (triton::arch::MemoryOperand& mem)
+      {
+        return triton::api.untaintMemory(mem);
+      },
+      py::arg("mem"));
+
+
+  m.def("untaintRegister",
+      [] (triton::arch::RegisterOperand& reg)
+      {
+        return triton::api.untaintRegister(reg);
+      },
+      py::arg("reg"));
+
+
+
+
+
+
+
+
+
+
+
 }
