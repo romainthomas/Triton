@@ -279,6 +279,18 @@ namespace triton {
               switch(op->type) {
 
                 case triton::extlibs::capstone::ARM64_OP_IMM: {
+
+                  // TODO: Better fix
+                  // For instructions such as 'cbz w9, #0x8'
+                  // 'size' is set to w9.size (QWORD_SIZE) while the imm 64-bits size
+                  // Thus, the value is truncated
+                  if (insn[j].id == triton::extlibs::capstone::ARM64_INS_CBZ or
+                      insn[j].id == triton::extlibs::capstone::ARM64_INS_CBNZ or
+                      (insn[j].id == triton::extlibs::capstone::ARM64_INS_TBNZ and n == 2))
+                  {
+                    size = QWORD_SIZE;
+                  }
+
                   triton::arch::Immediate imm(op->imm, size ? size : QWORD_SIZE);
 
                   /* Set Shift type and value */
@@ -308,7 +320,7 @@ namespace triton {
                   triton::arch::Immediate disp(op->mem.disp, immsize);
 
                   /* Specify that LEA contains a PC relative */
-                  /* FIXME: Valid in ARM64 ? */
+                  /* FIXME: Valid in ARM64 ? You don't have PC relative memory acess in AArch64 */
                   if (base.getId() == this->pcId)
                     mem.setPcRelative(inst.getNextAddress());
 
